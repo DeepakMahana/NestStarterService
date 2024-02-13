@@ -7,7 +7,7 @@ import { MainModule } from './main.module';
 import { RmqService } from './queue/rabbitmq/rmqservice';
 import { createDocument } from './swagger/swagger.service';
 import * as path from 'path';
-import otelSDK  from './tracing';
+import otelSDK  from './monitoring';
 
 async function bootstrap() {
   await require('dotenv').config({ path: path.resolve(__dirname, '../.env') })

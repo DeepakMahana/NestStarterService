@@ -12,6 +12,7 @@ import { WinstonInstrumentation } from '@opentelemetry/instrumentation-winston';
 import { BatchSpanProcessor } from '@opentelemetry/sdk-trace-base';
 import { AsyncLocalStorageContextManager } from '@opentelemetry/context-async-hooks';
 import { B3InjectEncoding, B3Propagator } from '@opentelemetry/propagator-b3';
+import { PrometheusExporter } from '@opentelemetry/exporter-prometheus';
 import {
     CompositePropagator,
     W3CTraceContextPropagator,
@@ -19,17 +20,22 @@ import {
   } from '@opentelemetry/core';
 import { JaegerPropagator } from '@opentelemetry/propagator-jaeger';
 
-const exporterOptions = {
+// Jaeger Traces
+const traceExporterOptions = {
   url: 'http://localhost:4317', // grcp
 };
 
-const traceExporter = new OTLPTraceExporter(exporterOptions);
+// Prometheus Metrics
+const metricExporter = new PrometheusExporter();
+
+const traceExporter = new OTLPTraceExporter(traceExporterOptions);
 const spanProcessor = new BatchSpanProcessor(traceExporter);
 
 const otelSDK = new NodeSDK({
     resource: new Resource({
         [SemanticResourceAttributes.SERVICE_NAME]: 'starterkit',
     }),
+    metricReader: metricExporter,
     traceExporter,
     spanProcessor: spanProcessor,
     contextManager: new AsyncLocalStorageContextManager(),

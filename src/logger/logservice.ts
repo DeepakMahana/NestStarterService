@@ -32,15 +32,16 @@ export class Logger implements LoggerService {
     const logLevel = isLogLevel(level) ? level : LogLevel.Info;
     let logMessage = `[${moment().format('ddd MMM DD HH:mm:ss YYYY')}] - [${message}]`;
     // Retrieve the current span context
-    const span = trace.getSpan(context.active());
-    if (span) {
-      const { spanId, traceId } = trace.getSpan(context.active())?.spanContext();
-      // Construct log message with trace and span IDs
-      logMessage = `[${moment().format('ddd MMM DD HH:mm:ss YYYY')}] - [${traceId}/${spanId}] - [${message}]`;
-      span.addEvent(message)
+    if(logLevel != LogLevel.HTTP){
+      const span = trace.getSpan(context.active());
+      if (span && span != undefined) {
+        const { spanId, traceId } = trace.getSpan(context.active())?.spanContext();
+        // Construct log message with trace and span IDs
+        logMessage = `[${moment().format('ddd MMM DD HH:mm:ss YYYY')}] - [${traceId}/${spanId}] - [${message}]`;
+        span.addEvent(message)
+      }
     }
-  
-    this.logger.log(logLevel, logMessage, meta);
+    this.logger.log(LogLevel.Info, logMessage, meta)
   }
 
   setDefaultMeta(correlationId: string) {
