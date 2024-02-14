@@ -25,9 +25,6 @@ const traceExporterOptions = {
   url: 'http://localhost:4317', // grcp
 };
 
-// Prometheus Metrics
-const metricExporter = new PrometheusExporter();
-
 const traceExporter = new OTLPTraceExporter(traceExporterOptions);
 const spanProcessor = new BatchSpanProcessor(traceExporter);
 
@@ -35,7 +32,6 @@ const otelSDK = new NodeSDK({
     resource: new Resource({
         [SemanticResourceAttributes.SERVICE_NAME]: 'starterkit',
     }),
-    metricReader: metricExporter,
     traceExporter,
     spanProcessor: spanProcessor,
     contextManager: new AsyncLocalStorageContextManager(),
@@ -46,7 +42,7 @@ const otelSDK = new NodeSDK({
         new MongoDBInstrumentation(),
         new MongooseInstrumentation(),
         new AmqplibInstrumentation(),
-        new WinstonInstrumentation()
+        new WinstonInstrumentation(),
     ],
     textMapPropagator: new CompositePropagator({
         propagators: [
