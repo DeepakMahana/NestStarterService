@@ -8,9 +8,16 @@ import { RmqService } from './queue/rabbitmq/rmqservice';
 import { createDocument } from './swagger/swagger.service';
 import * as path from 'path';
 import otelSDK  from './monitoring';
+import * as hpropagate from 'hpropagate'
 
 async function bootstrap() {
   await require('dotenv').config({ path: path.resolve(__dirname, '../.env') })
+
+  hpropagate({
+    setAndPropagateCorrelationId: false,
+    propagateInResponses: true,
+    headersToPropagate: ["X-Trace-Id"],
+  });
 
   await otelSDK.start();
   console.log('Started OTEL SDK');

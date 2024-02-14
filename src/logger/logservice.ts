@@ -2,7 +2,7 @@ import { Injectable, Scope, LoggerService } from '@nestjs/common';
 import * as moment from 'moment';
 import * as winston from 'winston';
 import { LogLevel, isLogLevel } from './loglevel';
-import { trace, context } from '@opentelemetry/api';
+import { trace, context, Span } from '@opentelemetry/api';
 
 @Injectable({ scope: Scope.TRANSIENT })
 export class Logger implements LoggerService {
@@ -13,14 +13,17 @@ export class Logger implements LoggerService {
   }
 
   private initializeLogger() {
-
     this.logger = winston.createLogger({
       level: 'info',
       transports: [
         new winston.transports.Console({
           format: winston.format.combine(
+            winston.format.timestamp(),
             winston.format.json(),
             winston.format.colorize(),
+            winston.format.printf(({ timestamp, level, message }) => {
+              return `[${timestamp}] - [${level}] - ${message}`;
+            }),
           ),
           stderrLevels: [LogLevel.Error, LogLevel.Warn],
         }),
@@ -31,17 +34,18 @@ export class Logger implements LoggerService {
   log(level: LogLevel | string, message: string, meta?: any) {
     const logLevel = isLogLevel(level) ? level : LogLevel.Info;
     let logMessage = `[${moment().format('ddd MMM DD HH:mm:ss YYYY')}] - [${message}]`;
-    // Retrieve the current span context
+
     if(logLevel != LogLevel.HTTP){
+      // Retrieve the current span context
       const span = trace.getSpan(context.active());
-      if (span && span != undefined) {
-        const { spanId, traceId } = trace.getSpan(context.active())?.spanContext();
+      if (span) {
+        const { traceId } = span.spanContext();
         // Construct log message with trace and span IDs
-        logMessage = `[${moment().format('ddd MMM DD HH:mm:ss YYYY')}] - [${traceId}/${spanId}] - [${message}]`;
-        span.addEvent(message)
+        logMessage = `[${moment().format('ddd MMM DD HH:mm:ss YYYY')}] - [${traceId}] - [${message}]`;
+        span.addEvent(message);
       }
     }
-    this.logger.log(LogLevel.Info, logMessage, meta)
+    this.logger.log(LogLevel.Info, logMessage, meta);
   }
 
   setDefaultMeta(correlationId: string) {

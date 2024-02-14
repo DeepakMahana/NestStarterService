@@ -42,7 +42,7 @@ const otelSDK = new NodeSDK({
     instrumentations: [
         new NestInstrumentation(),
         new HttpInstrumentation(),
-        new ExpressInstrumentation(),
+        // new ExpressInstrumentation(),
         new MongoDBInstrumentation(),
         new MongooseInstrumentation(),
         new AmqplibInstrumentation(),
